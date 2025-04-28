@@ -25,27 +25,30 @@ struct PlayerRespawnData
     bool inDungeon;
 };
 
-std::vector<PlayerRespawnData> respawnData;
+using GuidVector = std::vector<ObjectGuid>;
 
-bool drEnabled;
-float respawnHpPct;
+extern std::vector<PlayerRespawnData> respawnData;
+extern GuidVector playersToTeleport;
+
+extern bool drEnabled;
+extern float respawnHpPct;
 
 class DSPlayerScript : public PlayerScript
 {
 public:
     DSPlayerScript() : PlayerScript("DSPlayerScript") { }
 
+    void OnPlayerReleasedGhost(Player* player) override;
+    bool OnPlayerBeforeTeleport(Player* player, uint32 mapid, float x, float y, float z, float orientation, uint32 options, Unit* target) override;
+    void OnPlayerLogin(Player* player) override;
+    void OnPlayerLogout(Player* player) override;
+
 private:
-    std::vector<ObjectGuid> playersToTeleport;
-    bool IsInsideDungeonRaid(Player* /*player*/);
-    void ResurrectPlayer(Player* /*player*/);
-    PlayerRespawnData* GetOrCreateRespawnData(Player* /*player*/);
-    void CreateRespawnData(Player* /*player*/);
-    void OnPlayerReleasedGhost(Player* /*player*/) override;
-    bool OnBeforeTeleport(Player* /*player*/, uint32 /*mapid*/, float /*x*/, float /*y*/, float /*z*/, float /*orientation*/, uint32 /*options*/, Unit* /*target*/) override;
-    void OnMapChanged(Player* /*player*/) override;
-    void OnLogin(Player* /*player*/) override;
-    void OnLogout(Player* /*player*/) override;
+    bool IsInsideDungeonRaid(Player* player);
+    void ResurrectPlayer(Player* player);
+    PlayerRespawnData* GetOrCreateRespawnData(Player* player);
+    void CreateRespawnData(Player* player);
+    void OnMapChanged(Player* player);
 };
 
 class DSWorldScript : public WorldScript
@@ -53,10 +56,11 @@ class DSWorldScript : public WorldScript
 public:
     DSWorldScript() : WorldScript("DSWorldScript") { }
 
-private:
-    void OnAfterConfigLoad(bool /*reload*/) override;
+    void OnAfterConfigLoad(bool reload) override;
     void OnShutdown() override;
+
+private:
     void SaveRespawnData();
 };
 
-#endif //MODULE_DUNGEONRESPAWN_H
+#endif // MODULE_DUNGEONRESPAWN_H
